@@ -34,6 +34,11 @@ public class PrometheusPushGatewayReporterOptions {
                     .noDefaultValue()
                     .withDescription("The PushGateway server host.");
 
+    public static final ConfigOption<String> SCHEME =
+            ConfigOptions.key("scheme")
+                    .defaultValue("http")
+                    .withDescription("The PushGateway server scheme.");
+
     public static final ConfigOption<Integer> PORT =
             ConfigOptions.key("port")
                     .defaultValue(-1)

@@ -31,6 +31,8 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.PushGateway;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +43,7 @@ import static org.apache.flink.metrics.prometheus.PrometheusPushGatewayReporterO
 import static org.apache.flink.metrics.prometheus.PrometheusPushGatewayReporterOptions.JOB_NAME;
 import static org.apache.flink.metrics.prometheus.PrometheusPushGatewayReporterOptions.PORT;
 import static org.apache.flink.metrics.prometheus.PrometheusPushGatewayReporterOptions.RANDOM_JOB_NAME_SUFFIX;
+import static org.apache.flink.metrics.prometheus.PrometheusPushGatewayReporterOptions.SCHEME;
 
 /**
  * {@link MetricReporter} that exports {@link Metric Metrics} via Prometheus {@link PushGateway}.
@@ -61,6 +64,7 @@ public class PrometheusPushGatewayReporter extends AbstractPrometheusReporter im
         super.open(config);
 
         String host = config.getString(HOST.key(), HOST.defaultValue());
+        String scheme = config.getString(SCHEME.key(), SCHEME.defaultValue());
         int port = config.getInteger(PORT.key(), PORT.defaultValue());
         String configuredJobName = config.getString(JOB_NAME.key(), JOB_NAME.defaultValue());
         boolean randomSuffix =
@@ -82,10 +86,16 @@ public class PrometheusPushGatewayReporter extends AbstractPrometheusReporter im
             this.jobName = configuredJobName;
         }
 
-        pushGateway = new PushGateway(host + ':' + port);
+        try {
+            pushGateway = new PushGateway(new URL(scheme + "://" + host + ':' + port));
+        } catch (MalformedURLException e) {
+            pushGateway = new PushGateway(host + ':' + port);
+        }
+
         log.info(
-                "Configured PrometheusPushGatewayReporter with {host:{}, port:{}, jobName:{}, randomJobNameSuffix:{}, deleteOnShutdown:{}, groupingKey:{}}",
+                "Configured PrometheusPushGatewayReporter with {host:{}, scheme:{}, port:{}, jobName:{}, randomJobNameSuffix:{}, deleteOnShutdown:{}, groupingKey:{}}",
                 host,
+                scheme,
                 port,
                 jobName,
                 randomSuffix,
